@@ -1,30 +1,30 @@
--- Polaz FPS | CheckFps
--- FPS | Ping | Players | Honey (B)
--- Minimize + Appear Animation
--- Anti-AFK (Hidden)
+-- Polaz Depchai | CheckFps (FIXED)
 -- Stable for DeltaX
 
-pcall(function()
-	game.Players.LocalPlayer.PlayerGui:FindFirstChild("PolazFPS"):Destroy()
-end)
+repeat task.wait() until game:IsLoaded()
 
--- ===== SERVICES =====
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 
 local player = Players.LocalPlayer
+local guiParent = player:WaitForChild("PlayerGui")
 
--- ===== ANTI AFK (NGẦM) =====
+pcall(function()
+	guiParent:FindFirstChild("PolazFPS"):Destroy()
+end)
+
+-- ===== Anti AFK =====
 player.Idled:Connect(function()
 	VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 	task.wait(0.5)
 	VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
--- ===== BEE SWARM HONEY =====
-local honeyValue = nil
+-- ===== Honey (Bee Swarm) =====
+local honeyValue
 pcall(function()
 	honeyValue = player:WaitForChild("PlayerStats"):WaitForChild("Honey")
 end)
@@ -33,93 +33,103 @@ end)
 local gui = Instance.new("ScreenGui")
 gui.Name = "PolazFPS"
 gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = guiParent
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 220, 0, 120)
-frame.Position = UDim2.new(1, -235, 0, 20)
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.fromOffset(220,120)
+frame.Position = UDim2.new(1,-235,0,20)
 frame.AnchorPoint = Vector2.new(1,0)
 frame.BackgroundColor3 = Color3.fromRGB(255,255,255)
-frame.BackgroundTransparency = 1
+frame.BackgroundTransparency = 0.25
 frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
 
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,14)
 Instance.new("UIStroke", frame).Transparency = 0.3
 
--- ===== APPEAR ANIMATION =====
-frame.Size = UDim2.new(0, 0, 0, 0)
+-- ===== Appear Animation =====
+frame.Size = UDim2.fromOffset(0,0)
 TweenService:Create(
 	frame,
-	TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-	{
-		Size = UDim2.new(0, 220, 0, 120),
-		BackgroundTransparency = 0.25
-	}
+	TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),
+	{Size = UDim2.fromOffset(220,120)}
 ):Play()
 
--- ===== WATERMARK =====
+-- ===== Drag System (SAFE) =====
+local dragging, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		frame.Position = startPos + UDim2.fromOffset(delta.X, delta.Y)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+-- ===== Watermark =====
 local wm = Instance.new("TextLabel", frame)
-wm.Size = UDim2.new(0, 120, 0, 18)
-wm.Position = UDim2.new(0, 8, 0, 6)
+wm.Size = UDim2.new(1,-16,0,18)
+wm.Position = UDim2.new(0,8,0,6)
 wm.BackgroundTransparency = 1
 wm.Text = "Polaz FPS"
-wm.Font = Enum.Font.GothamBold
-wm.TextSize = 12
+wm.Font = Enum.Font.SourceSansBold
+wm.TextSize = 14
 wm.TextColor3 = Color3.fromRGB(120,120,120)
 wm.TextXAlignment = Enum.TextXAlignment.Left
 
--- ===== INFO =====
+-- ===== Info =====
 local info = Instance.new("TextLabel", frame)
-info.Size = UDim2.new(1, -16, 0, 70)
-info.Position = UDim2.new(0, 8, 0, 30)
+info.Size = UDim2.new(1,-16,1,-36)
+info.Position = UDim2.new(0,8,0,28)
 info.BackgroundTransparency = 1
-info.Font = Enum.Font.GothamMedium
+info.Font = Enum.Font.SourceSans
 info.TextSize = 14
-info.TextWrapped = true
 info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextYAlignment = Enum.TextYAlignment.Top
+info.TextWrapped = true
 info.TextColor3 = Color3.fromRGB(20,20,20)
 
--- ===== MINIMIZE BUTTON =====
+-- ===== Minimize =====
 local minimized = false
-local minBtn = Instance.new("TextButton", frame)
-minBtn.Size = UDim2.new(0, 26, 0, 26)
-minBtn.Position = UDim2.new(1, -30, 0, 6)
-minBtn.Text = "—"
-minBtn.Font = Enum.Font.GothamBold
-minBtn.TextSize = 14
-minBtn.BackgroundColor3 = Color3.fromRGB(245,245,245)
-minBtn.BorderSizePixel = 0
-Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
+local btn = Instance.new("TextButton", frame)
+btn.Size = UDim2.fromOffset(26,26)
+btn.Position = UDim2.new(1,-30,0,6)
+btn.Text = "-"
+btn.Font = Enum.Font.SourceSansBold
+btn.TextSize = 18
+btn.BackgroundColor3 = Color3.fromRGB(245,245,245)
+btn.BorderSizePixel = 0
+Instance.new("UICorner", btn).CornerRadius = UDim.new(1,0)
 
-minBtn.MouseButton1Click:Connect(function()
+btn.MouseButton1Click:Connect(function()
 	minimized = not minimized
-	minBtn.Text = minimized and "+" or "—"
-
+	btn.Text = minimized and "+" or "-"
 	if minimized then
 		info.Visible = false
 		wm.Visible = false
-		TweenService:Create(
-			frame,
-			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{Size = UDim2.new(0, 50, 0, 40)}
-		):Play()
+		frame:TweenSize(UDim2.fromOffset(50,40),"Out","Quad",0.25,true)
 	else
-		TweenService:Create(
-			frame,
-			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{Size = UDim2.new(0, 220, 0, 120)}
-		):Play()
-		task.delay(0.15, function()
+		frame:TweenSize(UDim2.fromOffset(220,120),"Out","Quad",0.25,true)
+		task.delay(0.15,function()
 			info.Visible = true
 			wm.Visible = true
 		end)
 	end
 end)
 
--- ===== FPS / PING / HONEY =====
+-- ===== FPS / DATA =====
 local fps, frames, last = 0, 0, tick()
 
 RunService.RenderStepped:Connect(function()
@@ -130,14 +140,14 @@ RunService.RenderStepped:Connect(function()
 		last = tick()
 	end
 
-	local honeyText = "N/A"
+	local honey = "N/A"
 	if honeyValue then
-		honeyText = string.format("%.2fB", honeyValue.Value / 1e9)
+		honey = string.format("%.2fB", honeyValue.Value / 1e9)
 	end
 
 	info.Text =
 		"FPS: "..fps..
 		"\nPing: "..math.floor(player:GetNetworkPing()*1000).." ms"..
 		"\nPlayers: "..#Players:GetPlayers()..
-		"\n🍯 Honey: "..honeyText
+		"\nHoney: "..honey
 end)
